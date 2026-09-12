@@ -1,4 +1,7 @@
 import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -7,6 +10,22 @@ from dotenv import load_dotenv
 import config
 from views import ViewPainelRio, ViewPalpitePublico, gerar_embed_previa
 from modals import palpites_registrados
+
+# --- SERVIDOR HTTP PARA O RENDER (BIND DE PORTA) ---
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"PorkBot 24/7 Online!")
+
+def start_web_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+    server.serve_forever()
+
+# Inicia o servidor HTTP em background para responder ao Render
+threading.Thread(target=start_web_server, daemon=True).start()
+# ----------------------------------------------------
 
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
