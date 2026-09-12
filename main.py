@@ -51,6 +51,18 @@ async def criar(interaction: discord.Interaction):
         )
         return
 
+    # Destranca o canal de palpites automaticamente ao criar um novo bolão
+    canal_palpites = interaction.guild.get_channel(config.CANAL_PALPITES_ID)
+    if canal_palpites:
+        try:
+            await canal_palpites.set_permissions(interaction.guild.default_role, send_messages=True)
+        except Exception as e:
+            print(f"Erro ao destrancar o canal de palpites: {e}")
+
+    # Reseta as flags e abre os palpites para o novo jogo
+    config.palpites_abertos = True
+    config.resultado_divulgado = False
+
     embed = gerar_embed_previa()
     await interaction.response.send_message(
         content="Altere as configurações do bolão utilizando as opções abaixo!",
@@ -132,7 +144,6 @@ async def encerrar(interaction: discord.Interaction):
         except Exception as e:
             print(f"Erro ao enviar Embed de encerramento: {e}")
 
-    # Usa followup pois usamos defer() no inicio
     await interaction.followup.send(
         content="O bolão foi encerrado e o canal foi trancado com sucesso!",
         ephemeral=True
@@ -157,10 +168,10 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
     # Evita timeout e duplicação de resposta do Discord
     await interaction.response.defer(ephemeral=True)
 
-    # TRAVA DE SEGURANÇA: Se já estiver vazio, bloqueia execuções duplicadas
-    if not palpites_registrados:
+    # TRAVA CORRETA: Usa a flag de controle do resultado
+    if config.resultado_divulgado:
         await interaction.followup.send(
-            content="⚠️ O resultado deste bolão já foi divulgado e os palpites já foram limpos!",
+            content="⚠️ O resultado deste bolão já foi divulgado!",
             ephemeral=True
         )
         return
@@ -169,7 +180,6 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
     time_visitante = config.embed_builder["time_visitante"]
     placar_oficial = (str(gols_time_casa), str(gols_time_visitante))
 
-    # 1. PRIMEIRO calcula os vencedores com os palpites atuais
     vencedores = [
         f"<@{user_id}>" for user_id, palpite in palpites_registrados.items()
         if palpite == placar_oficial
@@ -211,14 +221,13 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
     )
 
     try:
-        # 2. Envia o resultado correto com os acertadores no canal público
         await canal_palpites.send(embed=embed_resultado)
         
-        # 3. SÓ DEPOIS DE ENVIAR, limpa os palpites e fecha o bolão
+        # Marca que o resultado foi divulgado e limpa os palpites
+        config.resultado_divulgado = True
         palpites_registrados.clear()
         config.palpites_abertos = False
 
-        # Responde o admin de forma privada
         await interaction.followup.send(
             content=f"Resultado divulgado no canal {canal_palpites.mention} e os palpites foram limpos para o próximo jogo!",
             ephemeral=True
