@@ -144,18 +144,34 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
         )
         return
 
+    # Evita timeout e duplicação de resposta do Discord
+    await interaction.response.defer(ephemeral=True)
+
+    # TRAVA DE SEGURANÇA: Se já foi limpo, bloqueia execuções duplicadas
+    if not palpites_registrados:
+        await interaction.followup.send(
+            content="⚠️ O resultado deste bolão já foi divulgado e os palpites já foram limpos!",
+            ephemeral=True
+        )
+        return
+
     time_casa = config.embed_builder["time_casa"]
     time_visitante = config.embed_builder["time_visitante"]
     placar_oficial = (str(gols_time_casa), str(gols_time_visitante))
 
+    # Faz uma cópia segura dos palpites e limpa a memória imediatamente
+    copia_palpites = dict(palpites_registrados)
+    palpites_registrados.clear()
+    config.palpites_abertos = False
+
     vencedores = [
-        f"<@{user_id}>" for user_id, palpite in palpites_registrados.items()
+        f"<@{user_id}>" for user_id, palpite in copia_palpites.items()
         if palpite == placar_oficial
     ]
 
     canal_palpites = interaction.guild.get_channel(config.CANAL_PALPITES_ID)
     if not canal_palpites:
-        await interaction.response.send_message(
+        await interaction.followup.send(
             content=f"Canal de palpites inválido! Verifique a ID `{config.CANAL_PALPITES_ID}` no `config.py`.",
             ephemeral=True
         )
@@ -189,18 +205,16 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
     )
 
     try:
+        # Envia apenas uma vez o resultado oficial no canal público
         await canal_palpites.send(embed=embed_resultado)
-        
-        # Zera os palpites e fecha o bolão para a próxima partida
-        palpites_registrados.clear()
-        config.palpites_abertos = False
 
-        await interaction.response.send_message(
+        # Responde o admin de forma privada usando followup
+        await interaction.followup.send(
             content=f"Resultado divulgado no canal {canal_palpites.mention} e os palpites foram limpos para o próximo jogo!",
             ephemeral=True
         )
     except Exception as e:
-        await interaction.response.send_message(
+        await interaction.followup.send(
             content=f"Erro ao enviar o resultado para o canal de palpites: `{e}`",
             ephemeral=True
         )
