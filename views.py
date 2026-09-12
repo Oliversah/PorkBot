@@ -10,7 +10,6 @@ from modals import (
 def gerar_embed_previa():
     data = config.embed_builder
     
-    # Tratamento de Cor
     try:
         cor_hex = data["cor"].replace("#", "")
         cor_int = int(cor_hex, 16)
@@ -29,13 +28,6 @@ def gerar_embed_previa():
             name=data["autor_nome"],
             icon_url=data["autor_icon"] if data["autor_icon"] else None,
             url=data["autor_url"] if data["autor_url"] else None
-        )
-
-    if data["time_casa"] or data["time_visitante"]:
-        embed.add_field(
-            name="⚔️ Confronto",
-            value=f"**{data['time_casa']}** vs **{data['time_visitante']}**",
-            inline=False
         )
 
     if data["rodape_texto"]:
@@ -62,11 +54,10 @@ class ViewPainelRio(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    # TRAVA DE ADM GLOBAL PARA TODOS OS BOTÕES DO PAINEL
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message(
-                content="❌ Apenas administradores podem usar as opções do painel!",
+                content="❌ Apenas administradores podem utilizar este painel!",
                 ephemeral=True
             )
             return False
@@ -126,13 +117,28 @@ class ViewPalpitePublico(ui.View):
         self.time_casa = time_casa
         self.time_visitante = time_visitante
 
-    @ui.button(label="Enviar / Editar Palpite", style=discord.ButtonStyle.success, custom_id="btn_palpite_publico")
-    async def btn_palpite(self, interaction: discord.Interaction, button: ui.Button):
+    @ui.button(label="Palpitar", style=discord.ButtonStyle.blurple, emoji="✨", custom_id="btn_palpitar")
+    async def btn_palpitar(self, interaction: discord.Interaction, button: ui.Button):
         if not config.palpites_abertos:
             await interaction.response.send_message("Os palpites para este jogo estão encerrados!", ephemeral=True)
             return
 
         palpite_atual = palpites_registrados.get(interaction.user.id)
+        await interaction.response.send_modal(
+            ModalEnviarPalpite(self.time_casa, self.time_visitante, palpite_atual)
+        )
+
+    @ui.button(label="Editar Palpite", style=discord.ButtonStyle.secondary, emoji="✏️", custom_id="btn_editar_palpite")
+    async def btn_editar(self, interaction: discord.Interaction, button: ui.Button):
+        if not config.palpites_abertos:
+            await interaction.response.send_message("Os palpites para este jogo estão encerrados!", ephemeral=True)
+            return
+
+        palpite_atual = palpites_registrados.get(interaction.user.id)
+        if not palpite_atual:
+            await interaction.response.send_message("Você ainda não enviou nenhum palpite para editar!", ephemeral=True)
+            return
+
         await interaction.response.send_modal(
             ModalEnviarPalpite(self.time_casa, self.time_visitante, palpite_atual)
         )

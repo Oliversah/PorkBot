@@ -11,12 +11,16 @@ import config
 from views import ViewPainelRio, ViewPalpitePublico, gerar_embed_previa
 from modals import palpites_registrados
 
-# --- SERVIDOR HTTP PARA O RENDER (BIND DE PORTA) ---
+# Servidor HTTP para o Render
 class HealthCheckHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b"PorkBot 24/7 Online!")
+        self.wfile.write(b"PorkBot Online")
+
+    def do_HEAD(self):
+        self.send_response(200)
+        self.end_headers()
 
 def start_web_server():
     port = int(os.environ.get("PORT", 8080))
@@ -24,7 +28,6 @@ def start_web_server():
     server.serve_forever()
 
 threading.Thread(target=start_web_server, daemon=True).start()
-# ----------------------------------------------------
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -75,6 +78,7 @@ async def encerrar(interaction: discord.Interaction):
         return
 
     config.palpites_abertos = False
+
     time_casa = config.embed_builder["time_casa"]
     time_visitante = config.embed_builder["time_visitante"]
     canal_palpites = interaction.guild.get_channel(config.CANAL_PALPITES_ID)
@@ -98,13 +102,21 @@ async def encerrar(interaction: discord.Interaction):
             color=discord.Color.from_str("#f82424"),
             timestamp=discord.utils.utcnow()
         )
-        embed_encerrado.set_author(name="Palpites Fechados", icon_url=ICON_FECHADO)
+        
+        embed_encerrado.set_author(
+            name="Palpites Fechados",
+            icon_url=ICON_FECHADO
+        )
         
         guild_icon = interaction.guild.icon.url if interaction.guild.icon else None
+
         if guild_icon:
             embed_encerrado.set_thumbnail(url=guild_icon)
 
-        embed_encerrado.set_footer(text="Encerrado em", icon_url=guild_icon)
+        embed_encerrado.set_footer(
+            text="Encerrado em",
+            icon_url=guild_icon
+        )
 
         try:
             await canal_palpites.send(embed=embed_encerrado)
@@ -162,13 +174,19 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
         timestamp=interaction.created_at
     )
 
-    embed_resultado.set_author(name="Resultado do Bolão!", icon_url=ICON_RESULTADO)
+    embed_resultado.set_author(
+        name="Resultado do Bolão!",
+        icon_url=ICON_RESULTADO
+    )
 
     server_icon = interaction.guild.icon.url if interaction.guild.icon else None
     if server_icon:
         embed_resultado.set_thumbnail(url=server_icon)
 
-    embed_resultado.set_footer(text=interaction.guild.name, icon_url=server_icon)
+    embed_resultado.set_footer(
+        text=interaction.guild.name,
+        icon_url=server_icon
+    )
 
     try:
         await canal_palpites.send(embed=embed_resultado)
