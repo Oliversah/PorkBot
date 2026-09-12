@@ -190,8 +190,13 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
 
     try:
         await canal_palpites.send(embed=embed_resultado)
+        
+        # Zera os palpites e fecha o bolão para a próxima partida
+        palpites_registrados.clear()
+        config.palpites_abertos = False
+
         await interaction.response.send_message(
-            content=f"Resultado divulgado com sucesso no canal {canal_palpites.mention}!",
+            content=f"Resultado divulgado no canal {canal_palpites.mention} e os palpites foram limpos para o próximo jogo!",
             ephemeral=True
         )
     except Exception as e:
