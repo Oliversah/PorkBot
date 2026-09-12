@@ -41,17 +41,26 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 palpite_group = app_commands.Group(name="palpite", description="Comandos de gerenciamento do bolão")
 
 
+# Função que valida se é Admin OU possui um dos cargos permitidos
+def tem_permissao(member: discord.Member) -> bool:
+    if member.guild_permissions.administrator:
+        return True
+    
+    if hasattr(config, "CARGOS_PERMITIDOS_IDS"):
+        return any(role.id in config.CARGOS_PERMITIDOS_IDS for role in member.roles)
+    
+    return False
+
+
 @palpite_group.command(name="criar", description="Abre o painel de configuração do bolão.")
-@app_commands.default_permissions(administrator=True)
 async def criar(interaction: discord.Interaction):
-    if not interaction.user.guild_permissions.administrator:
+    if not tem_permissao(interaction.user):
         await interaction.response.send_message(
-            content="❌ Apenas administradores podem utilizar este comando!",
+            content="❌ Você não tem permissão para utilizar este comando!",
             ephemeral=True
         )
         return
 
-    # Destranca o canal de palpites automaticamente ao criar um novo bolão
     canal_palpites = interaction.guild.get_channel(config.CANAL_PALPITES_ID)
     if canal_palpites:
         try:
@@ -59,7 +68,6 @@ async def criar(interaction: discord.Interaction):
         except Exception as e:
             print(f"Erro ao destrancar o canal de palpites: {e}")
 
-    # Reseta as flags e abre os palpites para o novo jogo
     config.palpites_abertos = True
     config.resultado_divulgado = False
 
@@ -73,11 +81,10 @@ async def criar(interaction: discord.Interaction):
 
 
 @palpite_group.command(name="encerrar", description="Encerra o envio e edição de palpites.")
-@app_commands.default_permissions(administrator=True)
 async def encerrar(interaction: discord.Interaction):
-    if not interaction.user.guild_permissions.administrator:
+    if not tem_permissao(interaction.user):
         await interaction.response.send_message(
-            content="❌ Apenas administradores podem utilizar este comando!",
+            content="❌ Você não tem permissão para utilizar este comando!",
             ephemeral=True
         )
         return
@@ -89,7 +96,6 @@ async def encerrar(interaction: discord.Interaction):
         )
         return
 
-    # Evita erro de interação já reconhecida
     await interaction.response.defer(ephemeral=True)
 
     config.palpites_abertos = False
@@ -111,7 +117,6 @@ async def encerrar(interaction: discord.Interaction):
             print(f"Erro ao desativar botões do bolão: {e}")
 
     if canal_palpites:
-        # APLICA O LOCK NO CANAL (Tranca o envio de mensagens para o @everyone)
         try:
             await canal_palpites.set_permissions(interaction.guild.default_role, send_messages=False)
         except Exception as e:
@@ -156,19 +161,16 @@ async def encerrar(interaction: discord.Interaction):
     gols_time_casa="Gols do time mandante (Casa)",
     gols_time_visitante="Gols do time visitante"
 )
-@app_commands.default_permissions(administrator=True)
 async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_time_visitante: int):
-    if not interaction.user.guild_permissions.administrator:
+    if not tem_permissao(interaction.user):
         await interaction.response.send_message(
-            content="❌ Apenas administradores podem utilizar este comando!",
+            content="❌ Você não tem permissão para utilizar este comando!",
             ephemeral=True
         )
         return
 
-    # Evita timeout e duplicação de resposta do Discord
     await interaction.response.defer(ephemeral=True)
 
-    # TRAVA CORRETA: Usa a flag de controle do resultado
     if config.resultado_divulgado:
         await interaction.followup.send(
             content="⚠️ O resultado deste bolão já foi divulgado!",
@@ -223,7 +225,6 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
     try:
         await canal_palpites.send(embed=embed_resultado)
         
-        # Marca que o resultado foi divulgado e limpa os palpites
         config.resultado_divulgado = True
         palpites_registrados.clear()
         config.palpites_abertos = False
