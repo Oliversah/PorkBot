@@ -54,6 +54,7 @@ class ViewPainelRio(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
+    # TRAVA PARA PERMITIR APENAS ADMINISTRADORES NO PAINEL
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message(
@@ -79,7 +80,7 @@ class ViewPainelRio(ui.View):
     async def btn_autor(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(ModalAutor())
 
-    @ui.button(label="Confronto", style=discord.ButtonStyle.primary, emoji="<:Icon_Game_Controller:1540763949895520366>", row=1)
+    @ui.button(label="Confronto", style=discord.ButtonStyle.secondary, emoji="<:Icon_Game_Controller:1540763949895520366>", row=1)
     async def btn_confronto(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(ModalConfronto())
 
@@ -117,7 +118,7 @@ class ViewPalpitePublico(ui.View):
         self.time_casa = time_casa
         self.time_visitante = time_visitante
 
-    @ui.button(label="Palpitar", style=discord.ButtonStyle.blurple, emoji="<:Icon_Pencil:ID_DO_EMOJI_AQUI>", custom_id="btn_palpitar")
+    @ui.button(label="Palpitar", style=discord.ButtonStyle.blurple, emoji="<:Icon_Pencil:1540756242014933025>", custom_id="btn_palpitar")
     async def btn_palpitar(self, interaction: discord.Interaction, button: ui.Button):
         if not config.palpites_abertos:
             await interaction.response.send_message("Os palpites para este jogo estão encerrados!", ephemeral=True)
@@ -128,7 +129,7 @@ class ViewPalpitePublico(ui.View):
             ModalEnviarPalpite(self.time_casa, self.time_visitante, palpite_atual)
         )
 
-    @ui.button(label="Editar Palpite", style=discord.ButtonStyle.secondary, emoji="<:Icon_Sparkles:ID_DO_EMOJI_AQUI>", custom_id="btn_editar_palpite")
+    @ui.button(label="Editar Palpite", style=discord.ButtonStyle.secondary, emoji="<:Icon_Sparkles:1540756242014933025>", custom_id="btn_editar_palpite")
     async def btn_editar(self, interaction: discord.Interaction, button: ui.Button):
         if not config.palpites_abertos:
             await interaction.response.send_message("Os palpites para este jogo estão encerrados!", ephemeral=True)
