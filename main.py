@@ -229,10 +229,16 @@ bot.tree.add_command(palpite_group)
 
 @bot.event
 async def on_ready():
-    guild_obj = discord.Object(id=1492589647015055481)
+    # IDs dos servidores onde os comandos devem aparecer instantaneamente
+    ids_servidores = [
+        1492589647015055481,
+        794150101504491530
+    ]
     
-    bot.tree.copy_global_to(guild=guild_obj)
-    await bot.tree.sync(guild=guild_obj)
+    for guild_id in ids_servidores:
+        guild_obj = discord.Object(id=guild_id)
+        bot.tree.copy_global_to(guild=guild_obj)
+        await bot.tree.sync(guild=guild_obj)
     
     bot.add_view(ViewPalpitePublico(
         time_casa=config.embed_builder["time_casa"],
