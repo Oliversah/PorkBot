@@ -99,6 +99,12 @@ async def encerrar(interaction: discord.Interaction):
             print(f"Erro ao desativar botões do bolão: {e}")
 
     if canal_palpites:
+        # APLICA O LOCK NO CANAL (Tranca o envio de mensagens para o @everyone)
+        try:
+            await canal_palpites.set_permissions(interaction.guild.default_role, send_messages=False)
+        except Exception as e:
+            print(f"Erro ao aplicar lock no canal de palpites: {e}")
+
         embed_encerrado = discord.Embed(
             title=None,
             description="Os palpites foram fechados. Aguarde até o final da partida para conferir o resultado oficial.",
@@ -128,7 +134,7 @@ async def encerrar(interaction: discord.Interaction):
 
     # Usa followup pois usamos defer() no inicio
     await interaction.followup.send(
-        content="O bolão foi encerrado com sucesso!",
+        content="O bolão foi encerrado e o canal foi trancado com sucesso!",
         ephemeral=True
     )
 
@@ -229,7 +235,6 @@ bot.tree.add_command(palpite_group)
 
 @bot.event
 async def on_ready():
-    # IDs dos servidores onde os comandos devem aparecer instantaneamente
     ids_servidores = [
         1492589647015055481,
         794150101504491530
