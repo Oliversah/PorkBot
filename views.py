@@ -54,6 +54,7 @@ class ViewPainelRio(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
+    # TRAVA PARA PERMITIR APENAS ADMINISTRADORES NO PAINEL
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message(
@@ -108,7 +109,12 @@ class ViewPainelRio(ui.View):
         config.mensagem_bolao_id = msg.id
         config.palpites_abertos = True
 
-        await interaction.response.send_message(f"Bolão enviado no canal {canal.mention}!", ephemeral=True)
+        await interaction.response.send_message(f"Bolão enviado com sucesso no canal {canal.mention}!", ephemeral=True)
+
+        try:
+            await interaction.message.delete()
+        except Exception as e:
+            print(f"Erro ao apagar a mensagem do painel: {e}")
 
 
 class ViewPalpitePublico(ui.View):
