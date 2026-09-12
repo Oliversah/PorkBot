@@ -4,8 +4,9 @@ import config
 
 palpites_registrados = {}
 
-ICON_EDITADO = "https://cdn.discordapp.com/attachments/1539698492958572635/1541113740835946616/www.png?ex=6a8c6984&is=6a8b1804&hm=0d26edbd8c1f170ff68669a8eb4cf86f96fa24fc4e63ba2f51e49421305a2f91&"
-ICON_REGISTRADO = "https://cdn.discordapp.com/attachments/1539698492958572635/1541113771928457266/wwwww.png?ex=6a8c698b&is=6a8b180b&hm=059aa4f7d34a77f48767495a25fed8f253bdc910cdc7f86aa2efc8a231c1e492&"
+# Ícones atualizados para os logs de palpite
+ICON_EDITADO = "https://cdn.discordapp.com/attachments/1492590020891246832/1548435564464963594/laranja1.png?ex=6aa70c7f&is=6aa5baff&hm=af5fc27071f661a61c5fb9805bb46a8e0b0feb9d81063688a49c3125a368203d&"
+ICON_REGISTRADO = "https://cdn.discordapp.com/attachments/1492590020891246832/1548435692743565333/azul1.png?ex=6aa70c9d&is=6aa5bb1d&hm=cb1b24e2c861d4e264c3897e3939455bc06e37b9730991020da52ada13a503a8&"
 ICON_RESULTADO = "https://cdn.discordapp.com/attachments/1492590020891246832/1541131183255982140/trophy.png?ex=6a8c79c2&is=6a8b2842&hm=18652e51e19a24a8b5c0ecccc22a945b46784d07c074ac2e2613831888c2a4b5&"
 
 
