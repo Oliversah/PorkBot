@@ -63,35 +63,35 @@ class ViewPainelRio(ui.View):
             return False
         return True
 
-    @ui.button(label="Título", style=discord.ButtonStyle.secondary, row=0)
+    @ui.button(label="Título", style=discord.ButtonStyle.secondary, emoji="<:Icon_Member_Applications:1540752715905376308>", row=0)
     async def btn_titulo(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(ModalTitulo())
 
-    @ui.button(label="Descrição", style=discord.ButtonStyle.secondary, row=0)
+    @ui.button(label="Descrição", style=discord.ButtonStyle.secondary, emoji="<:Icon_Paper:1540751972511260792>", row=0)
     async def btn_descricao(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(ModalDescricao())
 
-    @ui.button(label="Cor", style=discord.ButtonStyle.secondary, row=0)
+    @ui.button(label="Cor", style=discord.ButtonStyle.secondary, emoji="<:Icon_Paint_Palette:1540752779679633479>", row=0)
     async def btn_cor(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(ModalCor())
 
-    @ui.button(label="Autor", style=discord.ButtonStyle.secondary, row=0)
+    @ui.button(label="Autor", style=discord.ButtonStyle.secondary, emoji="<:Icon_Shield_User:1540752834268766321>", row=0)
     async def btn_autor(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(ModalAutor())
 
-    @ui.button(label="Confronto", style=discord.ButtonStyle.primary, row=1)
+    @ui.button(label="Confronto", style=discord.ButtonStyle.primary, emoji="<:Icon_Game_Controller:1540763949895520366>", row=1)
     async def btn_confronto(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(ModalConfronto())
 
-    @ui.button(label="Rodapé", style=discord.ButtonStyle.secondary, row=1)
+    @ui.button(label="Rodapé", style=discord.ButtonStyle.secondary, emoji="<:Icon_Checkpoint:1540756169864384512>", row=1)
     async def btn_rodape(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(ModalRodape())
 
-    @ui.button(label="Mídias", style=discord.ButtonStyle.secondary, row=1)
+    @ui.button(label="Mídias", style=discord.ButtonStyle.secondary, emoji="<:Icon_Image:1540756117183922330>", row=1)
     async def btn_midia(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(ModalMidia())
 
-    @ui.button(label="Enviar Bolão", style=discord.ButtonStyle.success, row=2)
+    @ui.button(label="Enviar Bolão", style=discord.ButtonStyle.success, emoji="<:Icon_Download:1540756242014933025>", row=2)
     async def btn_enviar(self, interaction: discord.Interaction, button: ui.Button):
         canal = interaction.guild.get_channel(config.CANAL_PALPITES_ID)
         if not canal:
@@ -117,7 +117,7 @@ class ViewPalpitePublico(ui.View):
         self.time_casa = time_casa
         self.time_visitante = time_visitante
 
-    @ui.button(label="Palpitar", style=discord.ButtonStyle.blurple, emoji="✨", custom_id="btn_palpitar")
+    @ui.button(label="Palpitar", style=discord.ButtonStyle.blurple, emoji="<:Icon_Pencil:ID_DO_EMOJI_AQUI>", custom_id="btn_palpitar")
     async def btn_palpitar(self, interaction: discord.Interaction, button: ui.Button):
         if not config.palpites_abertos:
             await interaction.response.send_message("Os palpites para este jogo estão encerrados!", ephemeral=True)
@@ -128,7 +128,7 @@ class ViewPalpitePublico(ui.View):
             ModalEnviarPalpite(self.time_casa, self.time_visitante, palpite_atual)
         )
 
-    @ui.button(label="Editar Palpite", style=discord.ButtonStyle.secondary, emoji="✏️", custom_id="btn_editar_palpite")
+    @ui.button(label="Editar Palpite", style=discord.ButtonStyle.secondary, emoji="<:Icon_Sparkles:ID_DO_EMOJI_AQUI>", custom_id="btn_editar_palpite")
     async def btn_editar(self, interaction: discord.Interaction, button: ui.Button):
         if not config.palpites_abertos:
             await interaction.response.send_message("Os palpites para este jogo estão encerrados!", ephemeral=True)
