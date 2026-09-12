@@ -77,6 +77,9 @@ async def encerrar(interaction: discord.Interaction):
         )
         return
 
+    # Evita erro de interação já reconhecida
+    await interaction.response.defer(ephemeral=True)
+
     config.palpites_abertos = False
 
     time_casa = config.embed_builder["time_casa"]
@@ -123,7 +126,8 @@ async def encerrar(interaction: discord.Interaction):
         except Exception as e:
             print(f"Erro ao enviar Embed de encerramento: {e}")
 
-    await interaction.response.send_message(
+    # Usa followup pois usamos defer() no inicio
+    await interaction.followup.send(
         content="O bolão foi encerrado com sucesso!",
         ephemeral=True
     )
@@ -147,7 +151,7 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
     # Evita timeout e duplicação de resposta do Discord
     await interaction.response.defer(ephemeral=True)
 
-    # TRAVA DE SEGURANÇA: Se já foi limpo, bloqueia execuções duplicadas
+    # TRAVA DE SEGURANÇA: Se já estiver vazio, bloqueia execuções duplicadas
     if not palpites_registrados:
         await interaction.followup.send(
             content="⚠️ O resultado deste bolão já foi divulgado e os palpites já foram limpos!",
@@ -159,13 +163,9 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
     time_visitante = config.embed_builder["time_visitante"]
     placar_oficial = (str(gols_time_casa), str(gols_time_visitante))
 
-    # Faz uma cópia segura dos palpites e limpa a memória imediatamente
-    copia_palpites = dict(palpites_registrados)
-    palpites_registrados.clear()
-    config.palpites_abertos = False
-
+    # 1. PRIMEIRO calcula os vencedores com os palpites atuais
     vencedores = [
-        f"<@{user_id}>" for user_id, palpite in copia_palpites.items()
+        f"<@{user_id}>" for user_id, palpite in palpites_registrados.items()
         if palpite == placar_oficial
     ]
 
@@ -205,10 +205,14 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
     )
 
     try:
-        # Envia apenas uma vez o resultado oficial no canal público
+        # 2. Envia o resultado correto com os acertadores no canal público
         await canal_palpites.send(embed=embed_resultado)
+        
+        # 3. SÓ DEPOIS DE ENVIAR, limpa os palpites e fecha o bolão
+        palpites_registrados.clear()
+        config.palpites_abertos = False
 
-        # Responde o admin de forma privada usando followup
+        # Responde o admin de forma privada
         await interaction.followup.send(
             content=f"Resultado divulgado no canal {canal_palpites.mention} e os palpites foram limpos para o próximo jogo!",
             ephemeral=True
