@@ -23,11 +23,9 @@ def start_web_server():
     server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
     server.serve_forever()
 
-# Inicia o servidor HTTP em background para responder ao Render
 threading.Thread(target=start_web_server, daemon=True).start()
 # ----------------------------------------------------
 
-# Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -43,6 +41,13 @@ palpite_group = app_commands.Group(name="palpite", description="Comandos de gere
 @palpite_group.command(name="criar", description="Abre o painel de configuração do bolão.")
 @app_commands.default_permissions(administrator=True)
 async def criar(interaction: discord.Interaction):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            content="❌ Apenas administradores podem utilizar este comando!",
+            ephemeral=True
+        )
+        return
+
     embed = gerar_embed_previa()
     await interaction.response.send_message(
         content="Altere as configurações do bolão utilizando as opções abaixo!",
@@ -55,6 +60,13 @@ async def criar(interaction: discord.Interaction):
 @palpite_group.command(name="encerrar", description="Encerra o envio e edição de palpites.")
 @app_commands.default_permissions(administrator=True)
 async def encerrar(interaction: discord.Interaction):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            content="❌ Apenas administradores podem utilizar este comando!",
+            ephemeral=True
+        )
+        return
+
     if not config.palpites_abertos:
         await interaction.response.send_message(
             content="Os palpites já estão encerrados!",
@@ -62,14 +74,11 @@ async def encerrar(interaction: discord.Interaction):
         )
         return
 
-    # Bloqueia novos palpites
     config.palpites_abertos = False
-
     time_casa = config.embed_builder["time_casa"]
     time_visitante = config.embed_builder["time_visitante"]
     canal_palpites = interaction.guild.get_channel(config.CANAL_PALPITES_ID)
 
-    # 1. Desativa os botões da mensagem original do bolão
     if canal_palpites and config.mensagem_bolao_id:
         try:
             mensagem_bolao = await canal_palpites.fetch_message(config.mensagem_bolao_id)
@@ -82,7 +91,6 @@ async def encerrar(interaction: discord.Interaction):
         except Exception as e:
             print(f"Erro ao desativar botões do bolão: {e}")
 
-    # 2. Envia a nova Embed de encerramento
     if canal_palpites:
         embed_encerrado = discord.Embed(
             title=None,
@@ -90,30 +98,19 @@ async def encerrar(interaction: discord.Interaction):
             color=discord.Color.from_str("#f82424"),
             timestamp=discord.utils.utcnow()
         )
+        embed_encerrado.set_author(name="Palpites Fechados", icon_url=ICON_FECHADO)
         
-        embed_encerrado.set_author(
-            name="Palpites Fechados",
-            icon_url=ICON_FECHADO
-        )
-        
-        # Pega a URL do ícone do servidor
         guild_icon = interaction.guild.icon.url if interaction.guild.icon else None
-
         if guild_icon:
             embed_encerrado.set_thumbnail(url=guild_icon)
 
-        # Adiciona o texto e o ícone do servidor no rodapé
-        embed_encerrado.set_footer(
-            text="Encerrado em",
-            icon_url=guild_icon
-        )
+        embed_encerrado.set_footer(text="Encerrado em", icon_url=guild_icon)
 
         try:
             await canal_palpites.send(embed=embed_encerrado)
         except Exception as e:
             print(f"Erro ao enviar Embed de encerramento: {e}")
 
-    # Confirmação privada para quem usou o comando
     await interaction.response.send_message(
         content="O bolão foi encerrado com sucesso!",
         ephemeral=True
@@ -128,11 +125,17 @@ async def encerrar(interaction: discord.Interaction):
 )
 @app_commands.default_permissions(administrator=True)
 async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_time_visitante: int):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            content="❌ Apenas administradores podem utilizar este comando!",
+            ephemeral=True
+        )
+        return
+
     time_casa = config.embed_builder["time_casa"]
     time_visitante = config.embed_builder["time_visitante"]
     placar_oficial = (str(gols_time_casa), str(gols_time_visitante))
 
-    # Busca quem acertou o placar exato
     vencedores = [
         f"<@{user_id}>" for user_id, palpite in palpites_registrados.items()
         if palpite == placar_oficial
@@ -148,7 +151,6 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
 
     vencedores_texto = ", ".join(vencedores) if vencedores else "Ninguém acertou o placar exato!"
 
-    # Descrição formatada sem título no Embed
     descricao = (
         f"> A partida terminou em **{time_casa} {gols_time_casa} x {gols_time_visitante} {time_visitante}**.\n\n"
         f"**Vencedor(es):** {vencedores_texto}"
@@ -160,21 +162,13 @@ async def resultado(interaction: discord.Interaction, gols_time_casa: int, gols_
         timestamp=interaction.created_at
     )
 
-    # Autor com troféu
-    embed_resultado.set_author(
-        name="Resultado do Bolão!",
-        icon_url=ICON_RESULTADO
-    )
+    embed_resultado.set_author(name="Resultado do Bolão!", icon_url=ICON_RESULTADO)
 
-    # Ícone do servidor na Thumbnail e no Rodapé
     server_icon = interaction.guild.icon.url if interaction.guild.icon else None
     if server_icon:
         embed_resultado.set_thumbnail(url=server_icon)
 
-    embed_resultado.set_footer(
-        text=interaction.guild.name,
-        icon_url=server_icon
-    )
+    embed_resultado.set_footer(text=interaction.guild.name, icon_url=server_icon)
 
     try:
         await canal_palpites.send(embed=embed_resultado)
